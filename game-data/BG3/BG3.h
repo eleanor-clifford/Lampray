@@ -70,9 +70,9 @@ namespace Lamp::Game {
 
         void unmount() override{
             std::filesystem::path installPath(KeyInfo()["installDirPath"]);
-            system(("pkexec umount \""+KeyInfo()["installDirPath"]+"\"").c_str());
+            system(("sudo umount \""+KeyInfo()["installDirPath"]+"\"").c_str());
             std::filesystem::rename(installPath.parent_path() / ("Lampray Managed - " + installPath.stem().string()), KeyInfo()["installDirPath"]);
-            system(("pkexec umount \""+KeyInfo()["appDataPath"]+"/Mods\"").c_str());
+            system(("sudo umount \""+KeyInfo()["appDataPath"]+"/Mods\"").c_str());
             std::filesystem::rename(std::filesystem::path(KeyInfo()["appDataPath"]+"/Mods").parent_path() / ("Lampray Managed - " + std::filesystem::path(KeyInfo()["appDataPath"]+"/Mods").stem().string()), std::filesystem::path(KeyInfo()["appDataPath"]+"/Mods"));
         }
 

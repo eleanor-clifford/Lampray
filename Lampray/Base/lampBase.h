@@ -838,7 +838,7 @@ namespace Lamp::Core::Base{
 
                     // Build the command
                     std::string command;
-                    command+= "pkexec mount -t overlay overlay -o ";
+                    command+= "sudo mount -t overlay overlay -o ";
                     command+= "lowerdir=\""+MergedPath.string()+":";
                     // build the lowerdir
                     if(!lowerPaths.empty()){

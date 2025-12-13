@@ -238,7 +238,7 @@ Lamp::Game::lampReturn Lamp::Game::BG3::preCleanUp() {
             std::filesystem::exists(installPath.parent_path() / ("Lampray Managed - " + installPath.stem().string())) &&
             std::filesystem::is_directory(installPath.parent_path() / ("Lampray Managed - " + installPath.stem().string()))) {
         if(std::filesystem::is_empty(installPath)){
-            system(("pkexec umount \""+Lamp::Games::getInstance().currentGame->KeyInfo()["installDirPath"]+"\"").c_str());
+            system(("sudo umount \""+Lamp::Games::getInstance().currentGame->KeyInfo()["installDirPath"]+"\"").c_str());
             try {
                 std::filesystem::rename(
                         installPath.parent_path() / ("Lampray Managed - " + installPath.stem().string()),
@@ -260,7 +260,7 @@ Lamp::Game::lampReturn Lamp::Game::BG3::preCleanUp() {
         && std::filesystem::exists(tempAppPath) && std::filesystem::is_directory(tempAppPath)) {
         
         if(std::filesystem::is_empty(std::filesystem::path(KeyInfo()["appDataPath"]+"/Mods"))){
-            system(("pkexec umount \""+Lamp::Games::getInstance().currentGame->KeyInfo()["appDataPath"]+"/Mods\"").c_str());
+            system(("sudo umount \""+Lamp::Games::getInstance().currentGame->KeyInfo()["appDataPath"]+"/Mods\"").c_str());
             try {
                 std::filesystem::rename(tempAppPath / "Mods",
                                         appPath / "Mods");
