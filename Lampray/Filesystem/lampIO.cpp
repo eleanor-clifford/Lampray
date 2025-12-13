@@ -106,8 +106,8 @@ Lamp::Core::FS::lampIO::saveModList(Lamp::Core::FS::lampString game, std::vector
 
 Lamp::Core::FS::lampReturn
 Lamp::Core::FS::lampIO::saveKeyData(Lamp::Core::FS::lampString key, Lamp::Core::FS::lampString data, Lamp::Core::FS::lampString game) {
-    std::string actual = game;
-    if((std::string)game == "") {
+    lampString actual = game;
+    if(game == "") {
         actual = (std::string)Lamp::Games::getInstance().currentGame->Ident().ShortHand;;
     }
     Base::lampLog::getInstance().log("Saving " + actual + ":" + key + ":" + data);
@@ -148,17 +148,13 @@ Lamp::Core::FS::lampIO::saveKeyData(Lamp::Core::FS::lampString key, Lamp::Core::
     Base::lampLog::getInstance().log("Failed to save " + game + ":" + key + ":" + ":" + data,
                                      Base::lampLog::ERROR, true, Base::lampLog::LMP_KEYSAVEFAILED);
     return Lamp::Core::FS::lampReturn(0);
-
-
-
-
 }
 
 
 
 Lamp::Core::FS::lampReturn Lamp::Core::FS::lampIO::loadKeyData(Lamp::Core::FS::lampString key, Lamp::Core::FS::lampString game) {
     std::string actual = game;
-    if((std::string)game == "") {
+    if(game == "") {
         actual = (std::string)Lamp::Games::getInstance().currentGame->Ident().ShortHand;;
     }
     Base::lampLog::lampLog::getInstance().log("Loading " + actual + ":" + key);
@@ -187,7 +183,7 @@ Lamp::Core::FS::lampReturn Lamp::Core::FS::lampIO::loadKeyData(Lamp::Core::FS::l
 void Lamp::Core::FS::lampIO::handleFile(const std::filesystem::path &path) {
     if (std::regex_match(path.filename().string(), std::regex("^.*\\.(pak)$"))) {
         if (static_cast<std::string>(Games::getInstance().currentGame->Ident().ReadableName) == "Baldur's Gate 3") {
-            const bit7z::Bit7zLibrary lib{lampConfig::getInstance().bit7zLibaryLocation};
+            const bit7z::Bit7zLibrary lib{lampConfig::getInstance().bit7zLibraryLocation};
             bit7z::BitArchiveWriter archive{lib, bit7z::BitFormat::SevenZip};
             archive.addFile(path);
             archive.compressTo(lampConfig::getInstance().archiveDataPath + "/" + path.filename().string() + "_LMP.zip");
