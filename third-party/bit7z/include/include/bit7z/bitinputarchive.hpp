@@ -1,6 +1,6 @@
 /*
  * bit7z - A C++ static library to interface with the 7-zip shared libraries.
- * Copyright (c) 2014-2022 Riccardo Ostani - All Rights Reserved.
+ * Copyright (c) 2014-2023 Riccardo Ostani - All Rights Reserved.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,6 +26,15 @@ namespace bit7z {
 using std::vector;
 
 /**
+ * @brief Offset from where the archive starts within the input file.
+ */
+enum struct ArchiveStartOffset : std::uint8_t {
+    None, ///< Don't specify an archive start offset. For some formats, like Zip archives,
+          ///< this means that the whole input file will be searched for the archive's start.
+    FileStart ///< Check only the file start for the archive's start.
+};
+
+/**
  * @brief The BitInputArchive class, given a handler object, allows reading/extracting the content of archives.
  */
 class BitInputArchive {
@@ -33,57 +42,69 @@ class BitInputArchive {
         /**
          * @brief Constructs a BitInputArchive object, opening the input file archive.
          *
-         * @param handler   the reference to the BitAbstractArchiveHandler object containing all the settings to
-         *                  be used for reading the input archive
-         * @param in_file   the path to the input archive file
+         * @param handler     the reference to the BitAbstractArchiveHandler object containing all the settings to
+         *                    be used for reading the input archive
+         * @param inFile      the path to the input archive file
+         * @param startOffset (optional) specifies whether to search for the archive's start throughout the
+ *                            entire file or only at the beginning. The default behavior is to search at the beginning.
          */
-        BitInputArchive( const BitAbstractArchiveHandler& handler, const tstring& in_file );
+        BitInputArchive( const BitAbstractArchiveHandler& handler,
+                         const tstring& inFile,
+                         ArchiveStartOffset startOffset = ArchiveStartOffset::None );
 
         /**
          * @brief Constructs a BitInputArchive object, opening the input file archive.
          *
-         * @param handler   the reference to the BitAbstractArchiveHandler object containing all the settings to
-         *                  be used for reading the input archive
-         * @param arc_path  the path to the input archive file
+         * @param handler     the reference to the BitAbstractArchiveHandler object containing all the settings to
+         *                    be used for reading the input archive
+         * @param arcPath     the path to the input archive file
+         * @param startOffset (optional) whether to search for the archive's start throughout the entire file
+         *                    or only at the beginning. The default behavior is to search at the beginning.
          */
-#if defined( _WIN32 ) && defined( BIT7Z_AUTO_PREFIX_LONG_PATHS )
-        BitInputArchive( const BitAbstractArchiveHandler& handler, fs::path arc_path );
-#else
-        BitInputArchive( const BitAbstractArchiveHandler& handler, const fs::path& arc_path );
-#endif
+        BitInputArchive( const BitAbstractArchiveHandler& handler,
+                         const fs::path& arcPath,
+                         ArchiveStartOffset startOffset = ArchiveStartOffset::None );
 
         /**
          * @brief Constructs a BitInputArchive object, opening the archive given in the input buffer.
          *
-         * @param handler   the reference to the BitAbstractArchiveHandler object containing all the settings to
-         *                  be used for reading the input archive
-         * @param in_buffer the buffer containing the input archive
+         * @param handler     the reference to the BitAbstractArchiveHandler object containing all the settings to
+         *                    be used for reading the input archive
+         * @param inBuffer    the buffer containing the input archive
+         * @param startOffset (optional) whether to search for the archive's start throughout the entire file
+         *                    or only at the beginning. The default behavior is to search at the beginning.
          */
-        BitInputArchive( const BitAbstractArchiveHandler& handler, const std::vector< byte_t >& in_buffer );
+        BitInputArchive( const BitAbstractArchiveHandler& handler,
+                         const buffer_t& inBuffer,
+                         ArchiveStartOffset startOffset = ArchiveStartOffset::None );
 
         /**
          * @brief Constructs a BitInputArchive object, opening the archive by reading the given input stream.
          *
-         * @param handler   the reference to the BitAbstractArchiveHandler object containing all the settings to
-         *                  be used for reading the input archive
-         * @param in_stream the standard input stream of the input archive
+         * @param handler     the reference to the BitAbstractArchiveHandler object containing all the settings to
+         *                    be used for reading the input archive
+         * @param inStream    the standard input stream of the input archive
+         * @param startOffset (optional) whether to search for the archive's start throughout the entire file
+         *                    or only at the beginning. The default behavior is to search at the beginning.
          */
-        BitInputArchive( const BitAbstractArchiveHandler& handler, std::istream& in_stream );
+        BitInputArchive( const BitAbstractArchiveHandler& handler,
+                         std::istream& inStream,
+                         ArchiveStartOffset startOffset = ArchiveStartOffset::None );
 
         BitInputArchive( const BitInputArchive& ) = delete;
 
         BitInputArchive( BitInputArchive&& ) = delete;
 
-        BitInputArchive& operator=( const BitInputArchive& ) = delete;
+        auto operator=( const BitInputArchive& ) -> BitInputArchive& = delete;
 
-        BitInputArchive& operator=( BitInputArchive&& ) = delete;
+        auto operator=( BitInputArchive&& ) -> BitInputArchive& = delete;
 
         virtual ~BitInputArchive();
 
         /**
          * @return the detected format of the file.
          */
-        BIT7Z_NODISCARD const BitInFormat& detectedFormat() const noexcept;
+        BIT7Z_NODISCARD auto detectedFormat() const noexcept -> const BitInFormat&;
 
         /**
          * @brief Gets the specified archive property.
@@ -92,7 +113,7 @@ class BitInputArchive {
          *
          * @return the current value of the archive property or an empty BitPropVariant if no value is specified.
          */
-        BIT7Z_NODISCARD BitPropVariant archiveProperty( BitProperty property ) const;
+        BIT7Z_NODISCARD auto archiveProperty( BitProperty property ) const -> BitPropVariant;
 
         /**
          * @brief Gets the specified property of an item in the archive.
@@ -103,64 +124,95 @@ class BitInputArchive {
          * @return the current value of the item property or an empty BitPropVariant if the item has no value for
          * the property.
          */
-        BIT7Z_NODISCARD BitPropVariant itemProperty( uint32_t index, BitProperty property ) const;
+        BIT7Z_NODISCARD auto itemProperty( uint32_t index, BitProperty property ) const -> BitPropVariant;
 
         /**
          * @return the number of items contained in the archive.
          */
-        BIT7Z_NODISCARD uint32_t itemsCount() const;
+        BIT7Z_NODISCARD auto itemsCount() const -> uint32_t;
 
         /**
          * @param index the index of an item in the archive.
          *
          * @return true if and only if the item at the given index is a folder.
          */
-        BIT7Z_NODISCARD bool isItemFolder( uint32_t index ) const;
+        BIT7Z_NODISCARD auto isItemFolder( uint32_t index ) const -> bool;
 
         /**
          * @param index the index of an item in the archive.
          *
          * @return true if and only if the item at the given index is encrypted.
          */
-        BIT7Z_NODISCARD bool isItemEncrypted( uint32_t index ) const;
+        BIT7Z_NODISCARD auto isItemEncrypted( uint32_t index ) const -> bool;
 
         /**
          * @return the path to the archive (the empty string for buffer/stream archives).
          */
-        BIT7Z_NODISCARD const tstring& archivePath() const noexcept;
+        BIT7Z_NODISCARD auto archivePath() const noexcept -> const tstring&;
 
         /**
          * @return the BitAbstractArchiveHandler object containing the settings for reading the archive.
          */
-        BIT7Z_NODISCARD const BitAbstractArchiveHandler& handler() const noexcept;
+        BIT7Z_NODISCARD auto handler() const noexcept -> const BitAbstractArchiveHandler&;
+
+        /**
+         * @brief Use the given format property to read the archive.
+         *
+         * @param name      the name of the property.
+         * @param property  the property value.
+         */
+        void useFormatProperty( const wchar_t* name, const BitPropVariant& property ) const;
+
+        /**
+         * @brief Use the given format property to read the archive.
+         *
+         * @tparam T    the type of the property.
+         * @param name  the name of the property.
+         * @param value the property value.
+         */
+        template< typename T,
+                  typename = typename std::enable_if< is_explicitly_convertible< T, BitPropVariant >::value >::type >
+        void useFormatProperty( const wchar_t* name, T&& value ) const { // NOLINT(*-avoid-c-arrays)
+            useFormatProperty( name, BitPropVariant{ std::forward< T >( value ) } );
+        }
+
+        BIT7Z_DEPRECATED_MSG("Since v4.0; please, use the extractTo method.")
+        inline void extract( const tstring& outDir, const std::vector< uint32_t >& indices = {} ) const {
+            extractTo( outDir, indices );
+        }
+
+        /**
+         * @brief Extracts the archive to the chosen directory.
+         *
+         * @param outDir   the output directory where the extracted files will be put.
+         */
+        void extractTo( const tstring& outDir ) const;
 
         /**
          * @brief Extracts the specified items to the chosen directory.
          *
-         * @param out_dir   the output directory where the extracted files will be put.
-         * @param indices   the array of indices of the files in the archive that must be extracted.
+         * @param outDir   the output directory where the extracted files will be put.
+         * @param indices  the array of indices of the files in the archive that must be extracted.
          */
-        void extract( const tstring& out_dir, const std::vector< uint32_t >& indices = {} ) const;
+        void extractTo( const tstring& outDir, const std::vector< uint32_t >& indices ) const;
+
+        BIT7Z_DEPRECATED_MSG("Since v4.0; please, use the extractTo method.")
+        inline void extract( std::vector< byte_t >& outBuffer, uint32_t index = 0 ) const {
+            extractTo( outBuffer, index );
+        }
 
         /**
          * @brief Extracts a file to the output buffer.
          *
-         * @param out_buffer   the output buffer where the content of the archive will be put.
-         * @param index        the index of the file to be extracted.
+         * @param outBuffer   the output buffer where the content of the archive will be put.
+         * @param index       the index of the file to be extracted.
          */
-        void extract( std::vector< byte_t >& out_buffer, uint32_t index = 0 ) const;
+        void extractTo( std::vector< byte_t >& outBuffer, uint32_t index = 0 ) const;
 
-        /**
-         * @brief Extracts a file to the pre-allocated output buffer.
-         *
-         * @tparam N     the size of the output buffer (it must be equal to the unpacked size
-         *               of the item to be extracted).
-         * @param buffer the pre-allocated output buffer.
-         * @param index  the index of the file to be extracted.
-         */
         template< std::size_t N >
+        BIT7Z_DEPRECATED_MSG("Since v4.0; please, use the extractTo method.")
         void extract( std::array< byte_t, N >& buffer, uint32_t index = 0 ) const {
-            extract( buffer.data(), buffer.size(), index );
+            extractTo( buffer.data(), buffer.size(), index );
         }
 
         /**
@@ -172,8 +224,32 @@ class BitInputArchive {
          * @param index  the index of the file to be extracted.
          */
         template< std::size_t N >
+        void extractTo( std::array< byte_t, N >& buffer, uint32_t index = 0 ) const {
+            extractTo( buffer.data(), buffer.size(), index );
+        }
+
+        template< std::size_t N >
+        BIT7Z_DEPRECATED_MSG("Since v4.0; please, use the extractTo method.")
         void extract( byte_t (& buffer)[N], uint32_t index = 0 ) const { // NOLINT(*-avoid-c-arrays)
-            extract( buffer, N, index );
+            extractTo( buffer, N, index );
+        }
+
+        /**
+         * @brief Extracts a file to the pre-allocated output buffer.
+         *
+         * @tparam N     the size of the output buffer (it must be equal to the unpacked size
+         *               of the item to be extracted).
+         * @param buffer the pre-allocated output buffer.
+         * @param index  the index of the file to be extracted.
+         */
+        template< std::size_t N >
+        void extractTo( byte_t (& buffer)[N], uint32_t index = 0 ) const { // NOLINT(*-avoid-c-arrays)
+            extractTo( buffer, N, index );
+        }
+
+        BIT7Z_DEPRECATED_MSG("Since v4.0; please, use the extractTo method.")
+        inline void extract( byte_t* buffer, std::size_t size, uint32_t index = 0 ) const {
+            extractTo( buffer, size, index );
         }
 
         /**
@@ -184,23 +260,33 @@ class BitInputArchive {
          *               of the item to be extracted).
          * @param index  the index of the file to be extracted.
          */
-        void extract( byte_t* buffer, std::size_t size, uint32_t index = 0 ) const;
+        void extractTo( byte_t* buffer, std::size_t size, uint32_t index = 0 ) const;
+
+        BIT7Z_DEPRECATED_MSG("Since v4.0; please, use the extractTo method.")
+        inline void extract( std::ostream& outStream, uint32_t index = 0 ) const {
+            extractTo( outStream, index );
+        }
 
         /**
          * @brief Extracts a file to the output stream.
          *
-         * @param out_stream   the (binary) stream where the content of the archive will be put.
-         * @param index        the index of the file to be extracted.
+         * @param outStream   the (binary) stream where the content of the archive will be put.
+         * @param index       the index of the file to be extracted.
          */
-        void extract( std::ostream& out_stream, uint32_t index = 0 ) const;
+        void extractTo( std::ostream& outStream, uint32_t index = 0 ) const;
+
+        BIT7Z_DEPRECATED_MSG("Since v4.0; please, use the extractTo method.")
+        inline void extract( std::map< tstring, std::vector< byte_t > >& outMap ) const {
+            extractTo( outMap );
+        }
 
         /**
          * @brief Extracts the content of the archive to a map of memory buffers, where the keys are the paths
          * of the files (inside the archive), and the values are their decompressed contents.
          *
-         * @param out_map   the output map.
+         * @param outMap   the output map.
          */
-        void extract( std::map< tstring, std::vector< byte_t > >& out_map ) const;
+        void extractTo( std::map< tstring, std::vector< byte_t > >& outMap ) const;
 
         /**
          * @brief Tests the archive without extracting its content.
@@ -209,12 +295,19 @@ class BitInputArchive {
          */
         void test() const;
 
+        /**
+         * @brief Tests the item at the given index inside the archive without extracting it.
+         *
+         * If the archive is not valid, or there's no item at the given index, a BitException is thrown!
+         *
+         * @param index  the index of the file to be tested.
+         */
+        void testItem( uint32_t index ) const;
+
     protected:
-        IInArchive* openArchiveStream( const fs::path& name, IInStream* in_stream );
+        auto initUpdatableArchive( IOutArchive** newArc ) const -> HRESULT;
 
-        HRESULT initUpdatableArchive( IOutArchive** newArc ) const;
-
-        BIT7Z_NODISCARD HRESULT close() const noexcept;
+        BIT7Z_NODISCARD auto close() const noexcept -> HRESULT;
 
         friend class BitAbstractArchiveOpener;
 
@@ -228,11 +321,14 @@ class BitInputArchive {
         const BitAbstractArchiveHandler& mArchiveHandler;
         tstring mArchivePath;
 
+        BIT7Z_NODISCARD
+        auto openArchiveStream( const fs::path& name, IInStream* inStream, ArchiveStartOffset startOffset ) -> IInArchive*;
+
     public:
         /**
          * @brief An iterator for the elements contained in an archive.
          */
-        class const_iterator {
+        class ConstIterator {
             public:
                 // iterator traits
                 using iterator_category BIT7Z_MAYBE_UNUSED = std::input_iterator_tag;
@@ -246,14 +342,14 @@ class BitInputArchive {
                  *
                  * @return the iterator pointing to the next element in the archive.
                  */
-                const_iterator& operator++() noexcept;
+                auto operator++() noexcept -> ConstIterator&;
 
                 /**
                  * @brief Advances the iterator to the next element in the archive.
                  *
                  * @return the iterator before the advancement.
                  */
-                const_iterator operator++( int ) noexcept; // NOLINT(cert-dcl21-cpp)
+                auto operator++( int ) noexcept -> ConstIterator; // NOLINT(cert-dcl21-cpp)
 
                 /**
                  * @brief Compares the iterator with another iterator.
@@ -262,7 +358,7 @@ class BitInputArchive {
                  *
                  * @return whether the two iterators point to the same element in the archive or not.
                  */
-                bool operator==( const const_iterator& other ) const noexcept;
+                auto operator==( const ConstIterator& other ) const noexcept -> bool;
 
                 /**
                  * @brief Compares the iterator with another iterator.
@@ -271,53 +367,55 @@ class BitInputArchive {
                  *
                  * @return whether the two iterators point to the different elements in the archive or not.
                  */
-                bool operator!=( const const_iterator& other ) const noexcept;
+                auto operator!=( const ConstIterator& other ) const noexcept -> bool;
 
                 /**
                  * @brief Accesses the pointed-to element in the archive.
                  *
                  * @return a reference to the pointed-to element in the archive.
                  */
-                reference operator*() noexcept;
+                auto operator*() const noexcept -> reference;
 
                 /**
                  * @brief Accesses the pointed-to element in the archive.
                  *
                  * @return a pointer to the pointed-to element in the archive.
                  */
-                pointer operator->() noexcept;
+                auto operator->() const noexcept -> pointer;
 
             private:
                 BitArchiveItemOffset mItemOffset;
 
-                const_iterator( uint32_t item_index, const BitInputArchive& item_archive ) noexcept;
+                ConstIterator( uint32_t itemIndex, const BitInputArchive& itemArchive ) noexcept;
 
                 friend class BitInputArchive;
         };
 
+        BIT7Z_DEPRECATED_TYPEDEF( const_iterator, ConstIterator, "Use ConstIterator" );
+
         /**
-         * @return an iterator to the first element of the archive. If the archive is empty,
+         * @return an iterator to the first element of the archive; if the archive is empty,
          *         the returned iterator will be equal to the end() iterator.
          */
-        BIT7Z_NODISCARD BitInputArchive::const_iterator begin() const noexcept;
+        BIT7Z_NODISCARD auto begin() const noexcept -> BitInputArchive::ConstIterator;
 
         /**
-         * @return an iterator to the element following the last element of the archive.
-         *         This element acts as a placeholder; attempting to access it results in undefined behavior.
+         * @return an iterator to the element following the last element of the archive;
+         *         this element acts as a placeholder: attempting to access it results in undefined behavior.
          */
-        BIT7Z_NODISCARD BitInputArchive::const_iterator end() const noexcept;
+        BIT7Z_NODISCARD auto end() const noexcept -> BitInputArchive::ConstIterator;
 
         /**
-         * @return an iterator to the first element of the archive. If the archive is empty,
+         * @return an iterator to the first element of the archive; if the archive is empty,
          *         the returned iterator will be equal to the end() iterator.
          */
-        BIT7Z_NODISCARD BitInputArchive::const_iterator cbegin() const noexcept;
+        BIT7Z_NODISCARD auto cbegin() const noexcept -> BitInputArchive::ConstIterator;
 
         /**
-         * @return an iterator to the element following the last element of the archive.
-         *         This element acts as a placeholder; attempting to access it results in undefined behavior.
+         * @return an iterator to the element following the last element of the archive;
+         *         this element acts as a placeholder: attempting to access it results in undefined behavior.
          */
-        BIT7Z_NODISCARD BitInputArchive::const_iterator cend() const noexcept;
+        BIT7Z_NODISCARD auto cend() const noexcept -> BitInputArchive::ConstIterator;
 
         /**
          * @brief Find an item in the archive that has the given path.
@@ -327,7 +425,7 @@ class BitInputArchive {
          * @return an iterator to the item with the given path, or an iterator equal to the end() iterator
          * if no item is found.
          */
-        BIT7Z_NODISCARD BitInputArchive::const_iterator find( const tstring& path ) const noexcept;
+        BIT7Z_NODISCARD auto find( const tstring& path ) const noexcept -> BitInputArchive::ConstIterator;
 
         /**
          * @brief Find if there is an item in the archive that has the given path.
@@ -336,7 +434,17 @@ class BitInputArchive {
          *
          * @return true if and only if an item with the given path exists in the archive.
          */
-        BIT7Z_NODISCARD bool contains( const tstring& path ) const noexcept;
+        BIT7Z_NODISCARD auto contains( const tstring& path ) const noexcept -> bool;
+
+        /**
+         * @brief Retrieve the item at the given index.
+         *
+         * @param index the index of the item to be retrieved.
+         *
+         * @return the item at the given index within the archive.
+         */
+        BIT7Z_NODISCARD auto itemAt( uint32_t index ) const -> BitArchiveItemOffset;
+
 };
 
 }  // namespace bit7z

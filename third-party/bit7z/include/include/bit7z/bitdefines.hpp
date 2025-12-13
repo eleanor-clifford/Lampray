@@ -1,6 +1,6 @@
 /*
  * bit7z - A C++ static library to interface with the 7-zip shared libraries.
- * Copyright (c) 2014-2022 Riccardo Ostani - All Rights Reserved.
+ * Copyright (c) 2014-2023 Riccardo Ostani - All Rights Reserved.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,8 +10,11 @@
 #ifndef BITDEFINES_HPP
 #define BITDEFINES_HPP
 
-/* Uncomment the following macros if you don't want to define them yourself in your project files */
+/* Uncomment the following macros if you don't want to define them yourself in your project files,
+ * and you can't enable them via CMake. */
 //#define BIT7Z_AUTO_FORMAT
+//#define BIT7Z_AUTO_PREFIX_LONG_PATHS
+//#define BIT7Z_DISABLE_USE_STD_FILESYSTEM
 //#define BIT7Z_REGEX_MATCHING
 //#define BIT7Z_USE_STD_BYTE
 //#define BIT7Z_USE_NATIVE_STRING
@@ -24,11 +27,13 @@
 #   define BIT7Z_CPP_STANDARD 11
 #endif
 
-#if defined( __cpp_lib_filesystem )
-#   define BIT7Z_USE_STANDARD_FILESYSTEM
-#elif BIT7Z_CPP_STANDARD >= 17 && defined( __has_include )
-#   if __has_include( <filesystem> )
+#ifndef BIT7Z_DISABLE_USE_STD_FILESYSTEM
+#   if defined( __cpp_lib_filesystem )
 #       define BIT7Z_USE_STANDARD_FILESYSTEM
+#   elif BIT7Z_CPP_STANDARD >= 17 && defined( __has_include )
+#       if __has_include( <filesystem> )
+#           define BIT7Z_USE_STANDARD_FILESYSTEM
+#       endif
 #   endif
 #endif
 
@@ -100,6 +105,16 @@
 #   else
 #       define BIT7Z_DEPRECATED_ENUMERATOR( deprecated_value, new_value, msg ) \
                 deprecated_value BIT7Z_DEPRECATED_MSG( msg ) = new_value
+#   endif
+#endif
+
+#ifndef BIT7Z_DEPRECATED_TYPEDEF
+#   if defined( __GNUC__ ) && !defined( __clang__ ) && __GNUC__ < 7
+#       define BIT7Z_DEPRECATED_TYPEDEF( alias_name, alias_value, msg ) \
+                using alias_name BIT7Z_MAYBE_UNUSED __attribute__(( __deprecated__( msg ) )) = alias_value
+#   else
+#       define BIT7Z_DEPRECATED_TYPEDEF( alias_name, alias_value, msg ) \
+                using alias_name BIT7Z_MAYBE_UNUSED BIT7Z_DEPRECATED_MSG( msg ) = alias_value
 #   endif
 #endif
 

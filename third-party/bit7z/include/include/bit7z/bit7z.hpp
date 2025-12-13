@@ -1,6 +1,6 @@
 /*
  * bit7z - A C++ static library to interface with the 7-zip shared libraries.
- * Copyright (c) 2014-2022 Riccardo Ostani - All Rights Reserved.
+ * Copyright (c) 2014-2023 Riccardo Ostani - All Rights Reserved.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,7 +10,9 @@
 #ifndef BIT7Z_HPP
 #define BIT7Z_HPP
 
+#include "bitarchiveeditor.hpp"
 #include "bitarchivereader.hpp"
+#include "bitarchivewriter.hpp"
 #include "bitexception.hpp"
 #include "bitfilecompressor.hpp"
 #include "bitfileextractor.hpp"
