@@ -252,13 +252,13 @@ Lamp::Game::lampReturn Lamp::Game::BG3::preCleanUp() {
             skipMount = true;
         }
     }
-    
+
     std::filesystem::path appPath(keyInfo["appDataPath"]);
     std::filesystem::path tempAppPath(appPath.parent_path() / ("Lampray Managed - " + appPath.stem().string()));
-    
+
     if(std::filesystem::exists(appPath) && std::filesystem::is_directory(appPath)
         && std::filesystem::exists(tempAppPath) && std::filesystem::is_directory(tempAppPath)) {
-        
+
         if(std::filesystem::is_empty(std::filesystem::path(KeyInfo()["appDataPath"]+"/Mods"))){
             system(("sudo umount \""+Lamp::Games::getInstance().currentGame->KeyInfo()["appDataPath"]+"/Mods\"").c_str());
             try {
@@ -407,6 +407,7 @@ Lamp::Game::lampReturn Lamp::Game::BG3::deployment() {
         };
         Lamp::Core::FS::lampTrack::handleFile(E);
     Lamp::Core::lampControl::getInstance().deplopmentTracker = {4,4};
+    return true;
 }
 
 Lamp::Game::lampReturn Lamp::Game::BG3::postDeploymentTasks() {

@@ -218,7 +218,7 @@ namespace Lamp::Core{
                     for (auto it = columnNames.begin(); it != columnNames.end(); ++it) {
                         ImGui::TableSetupColumn((*it).c_str());
                     }
-					ImGui::TableHeadersRow();
+                    ImGui::TableHeadersRow();
                     ImGui::TableNextRow();
 
                     int i = 0;
@@ -271,12 +271,6 @@ namespace Lamp::Core{
 
                         std::filesystem::path path((*it)->ArchivePath);
                         std::string cutname = path.filename().c_str();
-                        if(Lamp::Games::getInstance().currentGame->Ident().ShortHand == "BG3") {
-                            size_t pos = cutname.find('-');
-                            if (pos != std::string::npos) {
-                                cutname.erase(pos);
-                            }
-                        }
                         // use full path string for separators
                         if((*it)->modType == Lamp::Games::getInstance().currentGame->SeparatorModType()){
                             cutname = path.c_str();
