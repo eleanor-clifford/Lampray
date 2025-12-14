@@ -194,7 +194,7 @@ namespace Lamp::Core{
                 // Add mod button
                 if (ImGui::Button(lampLang::LS("LAMPRAY_ADD_MOD_BUTTON"), ImVec2(io.DisplaySize.x, 0.0f))) {
                     nfdpathset_t modPaths;
-                    if (nfdresult_t result = NFD_OpenDialogMultiple("zip,rar,7z,tar.xz,tar.gz,.pak", nullptr, &modPaths); result == NFD_OKAY) {
+                    if (nfdresult_t result = NFD_OpenDialogMultiple("zip,rar,7z,tar.xz,tar.gz,pak", nullptr, &modPaths); result == NFD_OKAY) {
                         puts("Got files!");
                         size_t num_files = NFD_PathSet_GetCount(&modPaths);
                         for (size_t i = 0; i < num_files; i++) {
